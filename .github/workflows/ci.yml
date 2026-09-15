@@ -45,6 +45,14 @@ jobs:
           docker build -t finance-api:${{ github.sha }} ./backend
           docker build -t finance-web:${{ github.sha }} ./frontend
 
+
+      - name: Tag images for GHCR
+        run: |
+          docker tag finance-api:${{ github.sha }} ghcr.io/${{ github.repository_owner }}/finance-devops-lab-api:${{ github.sha }}
+          docker tag finance-web:${{ github.sha }} ghcr.io/${{ github.repository_owner }}/finance-devops-lab-web:${{ github.sha }}
+
+
+
       - name: Scan backend image
         uses: aquasecurity/trivy-action@v0.36.0
         with:
