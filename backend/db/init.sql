@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS transactions (
 );
 
 INSERT INTO users (email, password_hash, name)
-VALUES ('demo@finance.local', '$2a$10$JQmKpG6qY7c8gX7x8VjV8eJQj6b6G3Qw6k5Lw6M6Y5r9WqK1Yx9mG', 'Demo User')
+VALUES ('demo@finance.local', '$2a$10$6BTY.UeLvFAMKBu1wB8huemdN23ipAO4P2QXJVhAlckzLEmRvMlqS', 'Demo User')
 ON CONFLICT (email) DO NOTHING;
 
 INSERT INTO accounts (user_id, name, type, balance, currency)
