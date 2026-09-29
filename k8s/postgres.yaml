@@ -28,12 +28,89 @@ spec:
         app: postgres
 
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 70
+        runAsGroup: 70
+        fsGroup: 70
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+
+      initContainers:
+        - name: init-permissions
+          image: alpine:3.22
+
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+            runAsNonRoot: false
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+              add:
+                - CHOWN
+                - FOWNER
+                - DAC_OVERRIDE
+
+          command:
+            - sh
+            - -c
+            - |
+              mkdir -p /var/lib/postgresql/data
+              mkdir -p /var/run/postgresql
+              find /var/lib/postgresql/data ! -user 70 -exec chown 70:70 {} +
+              chown 70:70 /var/lib/postgresql/data
+              chown 70:70 /var/run/postgresql
+              chmod 700 /var/lib/postgresql/data
+              chmod 3775 /var/run/postgresql
+              echo "PostgreSQL volume permissions initialized"
+
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+
+            - name: postgres-run
+              mountPath: /var/run/postgresql
+
       containers:
         - name: postgres
           image: postgres:16-alpine
 
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+
           ports:
             - containerPort: 5432
+
+          startupProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - finance
+                - -d
+                - finance
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 30
+
+          readinessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - finance
+                - -d
+                - finance
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
 
           env:
             - name: POSTGRES_DB
@@ -52,15 +129,26 @@ spec:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data
 
+            - name: postgres-run
+              mountPath: /var/run/postgresql
+
+            - name: tmp
+              mountPath: /tmp
+
             - name: init-sql
               mountPath: /docker-entrypoint-initdb.d/001-init.sql
               subPath: init.sql
 
       volumes:
+        - name: postgres-run
+          emptyDir: {}
+
+        - name: tmp
+          emptyDir: {}
+
         - name: init-sql
           configMap:
             name: postgres-init
-
 
   volumeClaimTemplates:
     - metadata:
