@@ -69,6 +69,14 @@ spec:
               chmod 3775 /var/run/postgresql
               echo "PostgreSQL volume permissions initialized"
 
+          resources:
+            requests:
+              cpu: "10m"
+              memory: "16Mi"
+            limits:
+              cpu: "100m"
+              memory: "64Mi"
+
           volumeMounts:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data
@@ -86,6 +94,14 @@ spec:
             capabilities:
               drop:
                 - ALL
+
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
 
           ports:
             - containerPort: 5432
