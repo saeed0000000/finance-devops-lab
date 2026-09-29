@@ -28,6 +28,8 @@ spec:
         app: postgres
 
     spec:
+      automountServiceAccountToken: false
+
       securityContext:
         runAsNonRoot: true
         runAsUser: 70
