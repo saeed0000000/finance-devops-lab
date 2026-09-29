@@ -1,0 +1,30 @@
+name: Image Policy
+
+on:
+  pull_request:
+    paths:
+      - 'k8s/**'
+      - '.github/scripts/verify-image-digests.sh'
+      - '.github/workflows/image-policy.yml'
+
+  push:
+    branches: [main]
+    paths:
+      - 'k8s/**'
+      - '.github/scripts/verify-image-digests.sh'
+      - '.github/workflows/image-policy.yml'
+
+jobs:
+  verify-image-digests:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Verify Kubernetes image digests
+        run: |
+          .github/scripts/verify-image-digests.sh
