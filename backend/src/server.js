@@ -6,7 +6,33 @@ const { Pool } = require("pg");
 
 const app = express();
 const port = process.env.PORT || 3000;
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  max: 10,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 5000,
+});
+
+pool.on("error", (err) => {
+  console.error("Unexpected PostgreSQL pool error:", err.message);
+});
+
+process.on("SIGTERM", async () => {
+  try {
+    await pool.end();
+  } finally {
+    process.exit(0);
+  }
+});
+
+process.on("SIGINT", async () => {
+  try {
+    await pool.end();
+  } finally {
+    process.exit(0);
+  }
+});
 
 app.use(cors());
 app.use(express.json());
