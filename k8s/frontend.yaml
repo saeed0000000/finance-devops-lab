@@ -29,7 +29,7 @@ spec:
 
       containers:
         - name: frontend
-          image: ghcr.io/saeed0000000/finance-devops-lab-web:6bcafa01de3b4ac1b7fdb5754cba930d4c4be4d3
+          image: ghcr.io/saeed0000000/finance-devops-lab-web:c53b77df13d17eb39e667fb64f76d51c7333c1d9@sha256:789c1ea779c6a28c639bd63b8d3411f8796907c7e31fd669ef7dd299e71458bc
           imagePullPolicy: IfNotPresent
 
           securityContext:
