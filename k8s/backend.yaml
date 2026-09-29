@@ -16,10 +16,26 @@ spec:
         app: backend
 
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+
+
       containers:
         - name: backend
           image: ghcr.io/saeed0000000/finance-devops-lab-api:5541d6b1bb429ae1e3c518641f0ea45ea942d81d
           imagePullPolicy: IfNotPresent
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
 
           resources:
             requests:
@@ -31,6 +47,13 @@ spec:
 
           ports:
             - containerPort: 3000
+
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+
+
+
 
           env:
             - name: PORT
@@ -61,6 +84,12 @@ spec:
               port: 3000
             initialDelaySeconds: 10
             periodSeconds: 5
+
+
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
 
 ---
 apiVersion: v1
