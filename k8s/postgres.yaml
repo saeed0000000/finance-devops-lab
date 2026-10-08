@@ -62,11 +62,21 @@ spec:
             - |
               mkdir -p /var/lib/postgresql/data
               mkdir -p /var/run/postgresql
+              mkdir -p /var/lib/postgresql/wal-archive
+              mkdir -p /var/lib/postgresql/base-backups
+
               find /var/lib/postgresql/data ! -user 70 -exec chown 70:70 {} +
+
               chown 70:70 /var/lib/postgresql/data
               chown 70:70 /var/run/postgresql
+              chown 70:70 /var/lib/postgresql/wal-archive
+              chown 70:70 /var/lib/postgresql/base-backups
+
               chmod 700 /var/lib/postgresql/data
               chmod 3775 /var/run/postgresql
+              chmod 700 /var/lib/postgresql/wal-archive
+              chmod 700 /var/lib/postgresql/base-backups
+
               echo "PostgreSQL volume permissions initialized"
 
           resources:
@@ -84,9 +94,21 @@ spec:
             - name: postgres-run
               mountPath: /var/run/postgresql
 
+            - name: wal-archive
+              mountPath: /var/lib/postgresql/wal-archive
+
+            - name: base-backups
+              mountPath: /var/lib/postgresql/base-backups
+
       containers:
         - name: postgres
           image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
+
+          args:
+            - "-c"
+            - "archive_mode=on"
+            - "-c"
+            - "archive_command=test ! -f /var/lib/postgresql/wal-archive/%f && cp %p /var/lib/postgresql/wal-archive/%f"
 
           securityContext:
             allowPrivilegeEscalation: false
@@ -157,6 +179,12 @@ spec:
               mountPath: /docker-entrypoint-initdb.d/001-init.sql
               subPath: init.sql
 
+            - name: wal-archive
+              mountPath: /var/lib/postgresql/wal-archive
+
+            - name: base-backups
+              mountPath: /var/lib/postgresql/base-backups
+
       volumes:
         - name: postgres-run
           emptyDir: {}
@@ -167,6 +195,14 @@ spec:
         - name: init-sql
           configMap:
             name: postgres-init
+
+        - name: wal-archive
+          persistentVolumeClaim:
+            claimName: postgres-wal-archive
+
+        - name: base-backups
+          persistentVolumeClaim:
+            claimName: postgres-base-backups
 
   volumeClaimTemplates:
     - metadata:
